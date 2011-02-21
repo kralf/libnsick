@@ -52,4 +52,26 @@ void nsick_sensor_get_pose(
   float pitch,
   transform_pose_p pose);
 
+/** \brief Transform a point from sensor to device coordinates
+  * \param[in] sensor The nodding SICK sensor to transform the point for.
+  * \param[in] pitch The angular pitch of the sensor in [rad].
+  * \param[in,out] point The point to be transformed.
+  */
+void nsick_sensor_transform_point(
+  nsick_sensor_p sensor,
+  float pitch,
+  transform_point_p point);
+
+/** \brief Transform an array of points from sensor to device coordinates
+  * \param[in] sensor The nodding SICK sensor to transform the points for.
+  * \param[in] pitch The angular pitch of the sensor in [rad].
+  * \param[in,out] points The array of points to be transformed.
+  * \param[in] num_points The number of points in the array.
+  */
+void nsick_sensor_transform_points(
+  nsick_sensor_p sensor,
+  float pitch,
+  transform_point_p points,
+  size_t num_points);
+  
 #endif

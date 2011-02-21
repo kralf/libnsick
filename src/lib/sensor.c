@@ -41,3 +41,23 @@ void nsick_sensor_get_pose(nsick_sensor_p sensor, float pitch,
   pose->pitch = sensor->pose.pitch+pitch;
   pose->roll = sensor->pose.roll;
 }
+
+void nsick_sensor_transform_point(nsick_sensor_p sensor, float pitch,
+    transform_point_p point){
+  transform_pose_t pose;
+  transform_t transform;
+  
+  nsick_sensor_get_pose(sensor, pitch, &pose);
+  transform_init_pose(transform, &pose);
+  transform_point(transform, point);
+}
+
+void nsick_sensor_transform_points(nsick_sensor_p sensor, float pitch,
+    transform_point_p points, size_t num_points) {
+  transform_pose_t pose;
+  transform_t transform;
+
+  nsick_sensor_get_pose(sensor, pitch, &pose);
+  transform_init_pose(transform, &pose);
+  transform_points(transform, points, num_points);
+}

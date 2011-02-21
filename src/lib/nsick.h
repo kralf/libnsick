@@ -22,6 +22,7 @@
 #define NSICK_H
 
 #include <libepos/epos.h>
+#include <libepos/home.h>
 #include <libepos/position_profile.h>
 
 #include <tulibs/config.h>
@@ -71,7 +72,7 @@ extern config_t nsick_default_config;
 /** \brief Structure defining a nodding SICK device
   */
 typedef struct nsick_device_t {
-  epos_node_t node;                 //!< The nodding SICK controller node.
+  epos_node_p node;                 //!< The nodding SICK controller node.
   nsick_sensor_t sensor;            //!< The nodding SICK sensor.
 
   config_t config;                  //!< The nodding SICK configuration.
@@ -95,7 +96,8 @@ typedef struct nsick_device_t {
 /** \brief Initialize the nodding SICK device
   * \param[in] dev The nodding SICK device to be initialized.
   * \param[in] node The EPOS node of the nodding SICK device. If
-  *   null, a node will be created from default parameters.
+  *   null, a node will be created from default parameters. Otherwise,
+  *   the device will take possession of the node.
   * \param[in] can_dev The CAN communication device of the nodding SICK
   *   device. If null, a device will be created from default parameters.
   * \param[in] config The optional nodding SICK configuration parameters.
