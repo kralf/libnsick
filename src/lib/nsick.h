@@ -87,7 +87,8 @@ typedef struct nsick_device_t {
   size_t num_sweeps;                //!< The number of sweeps traveled.
   
   thread_t thread;                  //!< The nodding SICK control thread.
-  pthread_mutex_t mutex;            //!< The nodding SICK device mutex.
+  pthread_mutex_t control_mutex;    //!< The nodding SICK control mutex.
+  pthread_mutex_t profile_mutex;    //!< The nodding SICK profile mutex.
   int result;                       //!< The nodding SICK control result.
 
   epos_position_profile_t profile;  //!< The nodding SICK motion profile.

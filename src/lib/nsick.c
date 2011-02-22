@@ -96,7 +96,8 @@ void nsick_init(nsick_device_p dev, epos_node_p node, can_device_p can_dev,
     config_get_float(&dev->config, NSICK_PARAMETER_SENSOR_ROLL));
   nsick_sensor_init(&dev->sensor, &pose);
 
-  pthread_mutex_init(&dev->mutex, NULL);
+  pthread_mutex_init(&dev->control_mutex, NULL);
+  pthread_mutex_init(&dev->profile_mutex, NULL);
 }
 
 int nsick_init_arg(nsick_device_p dev, int argc, char **argv, const char*
@@ -128,7 +129,8 @@ void nsick_destroy(nsick_device_p dev) {
   epos_destroy(dev->node);
   config_destroy(&dev->config);
 
-  pthread_mutex_destroy(&dev->mutex);
+  pthread_mutex_destroy(&dev->control_mutex);
+  pthread_mutex_destroy(&dev->profile_mutex);
 }
 
 int nsick_open(nsick_device_p dev) {
@@ -172,26 +174,29 @@ void* nsick_control(void* device) {
   int move_start = 1;
   double timestamp;
 
+  pthread_mutex_lock(&dev->profile_mutex);
   epos_position_profile_init(&dev->profile, dev->start_pos, dev->velocity,
     dev->acceleration, dev->acceleration, epos_profile_sinusoidal);
 
-  pthread_mutex_lock(&dev->mutex);
+  pthread_mutex_lock(&dev->control_mutex);
   while (!thread_test_exit(&dev->thread) &&
       (!dev->max_sweeps || (dev->num_sweeps < dev->max_sweeps)) &&
       !(dev->result = epos_position_profile_start(dev->node,
         &dev->profile))) {
+    pthread_mutex_unlock(&dev->profile_mutex);
     timer_start(&timestamp);
 
     while (!thread_test_exit(&dev->thread) &&
         epos_profile_wait(dev->node, 0.0)) {
-      pthread_mutex_unlock(&dev->mutex);
+      pthread_mutex_unlock(&dev->control_mutex);
 
       timer_wait(timestamp, dev->control_freq);
       timer_start(&timestamp);
 
-      pthread_mutex_lock(&dev->mutex);
+      pthread_mutex_lock(&dev->control_mutex);
     }
 
+    pthread_mutex_lock(&dev->profile_mutex);
     dev->profile.target_value = (dev->profile.target_value == dev->start_pos) ?
       dev->end_pos : dev->start_pos;
 
@@ -200,7 +205,8 @@ void* nsick_control(void* device) {
     else
       ++dev->num_sweeps;
   }
-  pthread_mutex_unlock(&dev->mutex);
+  pthread_mutex_unlock(&dev->control_mutex);
+  pthread_mutex_unlock(&dev->profile_mutex);
 
   return 0;
 }
@@ -237,11 +243,11 @@ int nsick_wait(nsick_device_p dev, double timeout) {
 double nsick_get_pose(nsick_device_p dev, transform_pose_p pose) {
   double timestamp;
 
-  pthread_mutex_lock(&dev->mutex);
+  pthread_mutex_lock(&dev->control_mutex);
   timer_start(&timestamp);
   float pitch = epos_get_position(dev->node);
   timer_correct(&timestamp);
-  pthread_mutex_unlock(&dev->mutex);
+  pthread_mutex_unlock(&dev->control_mutex);
 
   nsick_sensor_get_pose(&dev->sensor, pitch, pose);
   
@@ -251,10 +257,10 @@ double nsick_get_pose(nsick_device_p dev, transform_pose_p pose) {
 double nsick_get_pose_estimate(nsick_device_p dev, transform_pose_p pose) {
   double timestamp;
 
-  pthread_mutex_lock(&dev->mutex);
+  pthread_mutex_lock(&dev->profile_mutex);
   timer_start(&timestamp);
   float pitch = epos_position_profile_estimate(&dev->profile, timestamp);
-  pthread_mutex_unlock(&dev->mutex);
+  pthread_mutex_unlock(&dev->profile_mutex);
 
   nsick_sensor_get_pose(&dev->sensor, pitch, pose);
 
