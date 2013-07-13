@@ -1,0 +1,23 @@
+libnsick (0.1-4) unstable; urgency=low
+
+  * Added changelog
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Sat, 13 Jul 2013 06:28:00 +0100
+
+libnsick (0.1-3) unstable; urgency=low
+
+  * Fixed frequency issues in control thread
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 22 Feb 2011 11:00:43 +0100
+
+libnsick (0.1-2) unstable; urgency=low
+
+  * Added nsick_sensor_transform_point()
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Mon, 21 Feb 2011 19:15:45 +0100
+
+libnsick (0.1-1) unstable; urgency=low
+
+  * Initial revision
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Mon, 21 Feb 2011 14:16:02 +0100
