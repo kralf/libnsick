@@ -1,3 +1,9 @@
+libnsick (0.1-5) unstable; urgency=low
+
+  * Release distributions
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Sat, 13 Jul 2013 06:34:00 +0100
+
 libnsick (0.1-4) unstable; urgency=low
 
   * Added changelog

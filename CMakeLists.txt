@@ -20,20 +20,35 @@ remake_doc(
 )
 
 remake_pack_deb(
-  libepos tulibs
+  DEPENDS libepos tulibs
 )
 remake_pack_deb(
   COMPONENT utils
   DESCRIPTION "utilities"
-  libnsick
+  DEPENDS libnsick
 )
 remake_pack_deb(
   COMPONENT dev
   DESCRIPTION "development headers"
-  libnsick libepos-dev tulibs-dev
+  DEPENDS libnsick libepos-dev tulibs-dev
 )
 remake_pack_deb(
   ARCH all
   COMPONENT doc
   DESCRIPTION "documentation"
+)
+
+remake_distribute_deb(
+  DISTRIBUTION lucid
+  SECTION libs
+  UPLOAD ppa:kralf/asl
+  DEPENDS libepos-dev tulibs-dev remake doxygen
+  PASS CMAKE_BUILD_TYPE LIBNSICK_GIT_REVISION
+)
+remake_distribute_deb(
+  DISTRIBUTION precise
+  SECTION libs
+  UPLOAD ppa:kralf/asl
+  DEPENDS libepos-dev tulibs-dev remake doxygen
+  PASS CMAKE_BUILD_TYPE LIBNSICK_GIT_REVISION
 )
