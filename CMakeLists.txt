@@ -9,7 +9,7 @@ remake_project(
   SUMMARY "A C-based driver library for the nodding SICK sensor."
   AUTHOR "Ralf Kaestner"
   CONTACT "ralf.kaestner@gmail.com"
-  HOME "http://aslforge.ethz.ch/projects/libnsick"
+  HOME "http://github.com/kralf/libnsick"
   LICENSE "GNU Lesser General Public License (LGPL)"
   PREFIX nsick-
   INSTALL /usr
@@ -42,13 +42,13 @@ remake_distribute_deb(
   DISTRIBUTION lucid
   SECTION libs
   UPLOAD ppa:kralf/asl
-  DEPENDS libepos-dev tulibs-dev remake doxygen
+  DEPENDS libepos-dev tulibs-dev remake pkg-config doxygen
   PASS CMAKE_BUILD_TYPE LIBNSICK_GIT_REVISION
 )
 remake_distribute_deb(
   DISTRIBUTION precise
   SECTION libs
   UPLOAD ppa:kralf/asl
-  DEPENDS libepos-dev tulibs-dev remake doxygen
+  DEPENDS libepos-dev tulibs-dev remake pkg-config doxygen
   PASS CMAKE_BUILD_TYPE LIBNSICK_GIT_REVISION
 )
