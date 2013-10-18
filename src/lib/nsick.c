@@ -108,11 +108,11 @@ int nsick_init_arg(nsick_device_p dev, int argc, char **argv, const char*
   if (!(result = epos_init_arg(node, argc, argv, 0, args))) {
     config_t config;
     if (result = config_init_arg(&config, argc, argv, (prefix) ? prefix :
-        NSICK_CONFIG_ARG_PREFIX, args)) {
+        NSICK_ARG_PREFIX, args)) {
       config_print_usage(stdout, argv[0], args, result);
-      config_print_help(stdout, &nsick_default_config, NSICK_CONFIG_ARG_PREFIX);
-      config_print_help(stdout, &epos_default_config, EPOS_CONFIG_ARG_PREFIX);
-      config_print_help(stdout, &can_default_config, CAN_CONFIG_ARG_PREFIX);
+      config_print_help(stdout, &nsick_default_config, NSICK_ARG_PREFIX);
+      config_print_help(stdout, &epos_default_config, EPOS_ARG_PREFIX);
+      config_print_help(stdout, &can_default_config, CAN_ARG_PREFIX);
     }
     else
       nsick_init(dev, node, 0, &config);
@@ -120,7 +120,7 @@ int nsick_init_arg(nsick_device_p dev, int argc, char **argv, const char*
     config_destroy(&config);
   }
   else
-    config_print_help(stdout, &nsick_default_config, NSICK_CONFIG_ARG_PREFIX);
+    config_print_help(stdout, &nsick_default_config, NSICK_ARG_PREFIX);
 
   return result;
 }

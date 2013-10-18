@@ -1,3 +1,10 @@
+libnsick (0.1-7) unstable; urgency=low
+
+  * Revised preprocessor defines naming conventions
+  * Revised documentation
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 18 Oct 2013 15:28:00 +0100
+
 libnsick (0.1-6) unstable; urgency=low
 
   * Added pkg-config file

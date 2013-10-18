@@ -34,12 +34,14 @@
   * \brief Nodding SICK device functions
   */
 
-/** Predefined nodding SICK constants
+/** \brief Predefined nodding SICK argument prefix
   */
-#define NSICK_WAIT_FOREVER                   -1.0
+#define NSICK_ARG_PREFIX                     "nsick"
 
-#define NSICK_CONFIG_ARG_PREFIX              "nsick"
-
+/** \name Parameters
+  * \brief Predefined nodding SICK parameters
+  */
+//@{
 #define NSICK_PARAMETER_START_POSITION       "start-pos"
 #define NSICK_PARAMETER_END_POSITION         "end-pos"
 #define NSICK_PARAMETER_MAX_VELOCITY         "max-vel"
@@ -51,15 +53,26 @@
 #define NSICK_PARAMETER_SENSOR_PITCH         "sensor-pitch"
 #define NSICK_PARAMETER_SENSOR_ROLL          "sensor-roll"
 #define NSICK_PARAMETER_CONTROL_FREQUENCY    "ctrl-freq"
+//@}
 
-/** Predefined nodding SICK error codes
+/** \name Constants
+  * \brief Predefined nodding SICK constants
   */
+//@{
+#define NSICK_WAIT_FOREVER                   -1.0
+//@}
+
+/** \name Error Codes
+  * \brief Predefined nodding SICK error codes
+  */
+//@{
 #define NSICK_ERROR_NONE                       0
 #define NSICK_ERROR_OPEN                       1
 #define NSICK_ERROR_CLOSE                      2
 #define NSICK_ERROR_HOME                       3
 #define NSICK_ERROR_PROFILE                    4
 #define NSICK_ERROR_WAIT_TIMEOUT               5
+//@}
 
 /** \brief Predefined nodding SICK error descriptions
   */
