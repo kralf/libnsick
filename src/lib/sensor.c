@@ -20,12 +20,12 @@
 
 #include "sensor.h"
 
-void nsick_sensor_init(nsick_sensor_p sensor, transform_pose_p pose) {
+void nsick_sensor_init(nsick_sensor_p sensor, const transform_pose_t* pose) {
   transform_pose_copy(&sensor->pose, pose);
 }
 
 void nsick_sensor_get_pose(nsick_sensor_p sensor, float pitch,  
-    transform_pose_p pose) {
+    transform_pose_t* pose) {
   transform_point_t origin;
   transform_t rotation;
   
@@ -43,7 +43,7 @@ void nsick_sensor_get_pose(nsick_sensor_p sensor, float pitch,
 }
 
 void nsick_sensor_transform_point(nsick_sensor_p sensor, float pitch,
-    transform_point_p point){
+    transform_point_t* point){
   transform_pose_t pose;
   transform_t transform;
   
@@ -53,7 +53,7 @@ void nsick_sensor_transform_point(nsick_sensor_p sensor, float pitch,
 }
 
 void nsick_sensor_transform_points(nsick_sensor_p sensor, float pitch,
-    transform_point_p points, size_t num_points) {
+    transform_point_t* points, size_t num_points) {
   transform_pose_t pose;
   transform_t transform;
 

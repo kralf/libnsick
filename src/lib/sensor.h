@@ -21,7 +21,7 @@
 #ifndef NSICK_SENSOR_H
 #define NSICK_SENSOR_H
 
-#include <tulibs/transform.h>
+#include <transform/transform.h>
 
 /** \file sensor.h
   * \brief Nodding SICK sensor functions
@@ -40,7 +40,7 @@ typedef struct nsick_sensor_t {
   */
 void nsick_sensor_init(
   nsick_sensor_p sensor,
-  transform_pose_p pose);
+  const transform_pose_t* pose);
 
 /** \brief Retrieve the pose of the nodding SICK sensor
   * \param[in] sensor The nodding SICK sensor to retrieve the pose for.
@@ -50,7 +50,7 @@ void nsick_sensor_init(
 void nsick_sensor_get_pose(
   nsick_sensor_p sensor,
   float pitch,
-  transform_pose_p pose);
+  transform_pose_t* pose);
 
 /** \brief Transform a point from sensor to device coordinates
   * \param[in] sensor The nodding SICK sensor to transform the point for.
@@ -60,7 +60,7 @@ void nsick_sensor_get_pose(
 void nsick_sensor_transform_point(
   nsick_sensor_p sensor,
   float pitch,
-  transform_point_p point);
+  transform_point_t* point);
 
 /** \brief Transform an array of points from sensor to device coordinates
   * \param[in] sensor The nodding SICK sensor to transform the points for.
@@ -71,7 +71,7 @@ void nsick_sensor_transform_point(
 void nsick_sensor_transform_points(
   nsick_sensor_p sensor,
   float pitch,
-  transform_point_p points,
+  transform_point_t* points,
   size_t num_points);
   
 #endif

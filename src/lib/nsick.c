@@ -18,62 +18,149 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <macros.h>
+
 #include "nsick.h"
 
 const char* nsick_errors[] = {
-  "success",
-  "error opening EPOS",
-  "error closing EPOS",
-  "error homing EPOS",
-  "error traveling EPOS profile",
-  "wait operation timed out",
+  "Success",
+  "Nodding SICK device configuration error",
+  "Failed to connect nodding SICK device",
+  "Failed to disconnect nodding SICK device",
+  "Failed to home nodding SICK device",
+  "Profile travel failed for nodding SICK device",
+  "Nodding SICK device wait operation timed out",
 };
 
-#define NSICK_PARAMETER_START_POSITION       "start-pos"
-#define NSICK_PARAMETER_END_POSITION         "end-pos"
-#define NSICK_PARAMETER_MAX_VELOCITY         "max-vel"
-#define NSICK_PARAMETER_MAX_ACCELERATION     "max-acc"
-#define NSICK_PARAMETER_SENSOR_X             "sensor-x"
-#define NSICK_PARAMETER_SENSOR_Y             "sensor-y"
-#define NSICK_PARAMETER_SENSOR_Z             "sensor-z"
-#define NSICK_PARAMETER_SENSOR_YAW           "sensor-yaw"
-#define NSICK_PARAMETER_SENSOR_PITCH         "sensor-pitch"
-#define NSICK_PARAMETER_SENSOR_ROLL          "sensor-roll"
-
-param_t nsick_default_params[] = {
-  {NSICK_PARAMETER_START_POSITION, "-45.0"},
-  {NSICK_PARAMETER_END_POSITION, "45.0"},
-  {NSICK_PARAMETER_MAX_VELOCITY, "45.0"},
-  {NSICK_PARAMETER_MAX_ACCELERATION, "45.0"},
-
-  {NSICK_PARAMETER_SENSOR_X, "0.037"},
-  {NSICK_PARAMETER_SENSOR_Y, "0.0"},
-  {NSICK_PARAMETER_SENSOR_Z, "-0.032"},
-  {NSICK_PARAMETER_SENSOR_YAW, "0.0"},
-  {NSICK_PARAMETER_SENSOR_PITCH, "0.0"},
-  {NSICK_PARAMETER_SENSOR_ROLL, "0.0"},
-
-  {NSICK_PARAMETER_CONTROL_FREQUENCY, "10.0"},
+config_param_t nsick_default_params[] = {
+  {NSICK_PARAMETER_START_POSITION,
+    config_param_type_float,
+    "-45.0",
+    "(-inf, inf)",
+    "Start position of the profile in [deg]",
+  },
+  {NSICK_PARAMETER_END_POSITION,
+    config_param_type_float,
+    "45.0",
+    "(-inf, inf)",
+    "End position of the profile in [deg]",
+  },
+  {NSICK_PARAMETER_MAX_VELOCITY,
+    config_param_type_float,
+    "45.0",
+    "[0.0, inf)",
+    "Maximum velocity of the profile in [deg/s]",
+  },
+  {NSICK_PARAMETER_MAX_ACCELERATION,
+    config_param_type_float,
+    "45.0",
+    "[0.0, inf)",
+    "Maximum acceleration of the profile in [deg/s^2]",
+  },
+  {NSICK_PARAMETER_SENSOR_X,
+    config_param_type_float,
+    "0.037",
+    "(-inf, inf)",
+    "X-offset of the sensor origin in [m]"
+  },
+  {NSICK_PARAMETER_SENSOR_Y,
+    config_param_type_float,
+    "0.0",
+    "(-inf, inf)",
+    "Y-offset of the sensor origin in [m]"
+  },
+  {NSICK_PARAMETER_SENSOR_Z,
+    config_param_type_float,
+    "-0.032",
+    "(-inf, inf)",
+    "Z-offset of the sensor origin in [m]"
+  },
+  {NSICK_PARAMETER_SENSOR_YAW,
+    config_param_type_float,
+    "0.0",
+    "(-inf, inf)",
+    "Yaw-offset of the sensor origin in [deg]"
+  },
+  {NSICK_PARAMETER_SENSOR_PITCH,
+    config_param_type_float,
+    "0.0",
+    "(-inf, inf)",
+    "Pitch-offset of the sensor origin in [deg]"
+  },
+  {NSICK_PARAMETER_SENSOR_ROLL,
+    config_param_type_float,
+    "0.0",
+    "(-inf, inf)",
+    "Roll-offset of the sensor origin in [deg]"
+  },
+  {NSICK_PARAMETER_CONTROL_FREQUENCY,
+    config_param_type_float,
+    "10.0",
+    "[0.0, inf)",
+    "Frequency of the control loop in [Hz]"
+  },
 };
 
-config_t nsick_default_config = {
+const config_default_t nsick_default_config = {
   nsick_default_params,
-  sizeof(nsick_default_params)/sizeof(param_t),
+  sizeof(nsick_default_params)/sizeof(config_param_t),
 };
 
-void nsick_init(nsick_device_p dev, epos_node_p node, can_device_p can_dev,
-    config_p config) {
+void nsick_init_components(nsick_device_t* dev, epos_node_t* node,
+  can_device_t* can_dev);
+
+void nsick_init(nsick_device_t* dev, epos_node_t* node, can_device_t*
+    can_dev) {
+  config_init_default(&dev->config, &nsick_default_config);
+  error_init(&dev->error, nsick_errors);
+  
+  nsick_init_components(dev, node, can_dev);
+}
+
+int nsick_init_config(nsick_device_t* dev, epos_node_t* node, can_device_t*
+    can_dev, const config_t* config) {
+  config_init_default(&dev->config, &nsick_default_config);
+  error_init(&dev->error, nsick_errors);
+  
+  if (config_set(&dev->config, config))
+    error_blame(&dev->error, &dev->config.error, NSICK_ERROR_CONFIG);
+  nsick_init_components(dev, node, can_dev);
+  
+  return dev->error.code;
+}
+
+int nsick_init_config_parse(nsick_device_t* dev, config_parser_t* parser,
+    const char* option_group, int argc, char **argv, config_parser_exit_t
+    exit) {
+  config_init_default(&dev->config, &nsick_default_config);
+  error_init(&dev->error, nsick_errors);
+  
+  option_group = option_group ? option_group : NSICK_CONFIG_PARSER_OPTION_GROUP;
+  config_parser_add_option_group(parser, option_group, &nsick_default_config,
+    "Nodding SICK device options", 
+    "These options control the settings which are specific to the nodding "
+    "SICK device.");
+
+  epos_node_t* node = malloc(sizeof(epos_node_t));
+  if (epos_node_init_config_parse(node, parser, 0, argc, argv, exit))
+    error_blame(&dev->error, &node->error, NSICK_ERROR_CONFIG);
+  else if (config_set(&dev->config, &config_parser_get_option_group(
+      parser, option_group)->options))
+    error_blame(&dev->error, &dev->config.error, NSICK_ERROR_CONFIG);
+  nsick_init_components(dev, node, 0);
+
+  return dev->error.code;
+}
+
+void nsick_init_components(nsick_device_t* dev, epos_node_t* node,
+    can_device_t* can_dev) {
   if (!node) {
     dev->node = malloc(sizeof(epos_node_t));
-    epos_init(dev->node, can_dev, 0);
+    epos_node_init(dev->node, can_dev);
   }
   else
     dev->node = node;
-
-  config_init_default(&dev->config, &nsick_default_config);
-  if (config)
-    config_set(&dev->config, config);
-
+  
   dev->start_pos = deg_to_rad(config_get_float(&dev->config,
     NSICK_PARAMETER_START_POSITION));
   dev->end_pos = deg_to_rad(config_get_float(&dev->config,
@@ -100,83 +187,76 @@ void nsick_init(nsick_device_p dev, epos_node_p node, can_device_p can_dev,
   pthread_mutex_init(&dev->profile_mutex, NULL);
 }
 
-int nsick_init_arg(nsick_device_p dev, int argc, char **argv, const char*
-    prefix, const char* args) {
-  int result;
-  epos_node_p node = malloc(sizeof(epos_node_t));
-
-  if (!(result = epos_init_arg(node, argc, argv, 0, args))) {
-    config_t config;
-    if (result = config_init_arg(&config, argc, argv, (prefix) ? prefix :
-        NSICK_ARG_PREFIX, args)) {
-      config_print_usage(stdout, argv[0], args, result);
-      config_print_help(stdout, &nsick_default_config, NSICK_ARG_PREFIX);
-      config_print_help(stdout, &epos_default_config, EPOS_ARG_PREFIX);
-      config_print_help(stdout, &can_default_config, CAN_ARG_PREFIX);
-    }
-    else
-      nsick_init(dev, node, 0, &config);
-    
-    config_destroy(&config);
-  }
-  else
-    config_print_help(stdout, &nsick_default_config, NSICK_ARG_PREFIX);
-
-  return result;
-}
-
-void nsick_destroy(nsick_device_p dev) {
-  epos_destroy(dev->node);
+void nsick_destroy(nsick_device_t* dev) {
+  epos_node_destroy(dev->node);
   config_destroy(&dev->config);
 
   pthread_mutex_destroy(&dev->control_mutex);
   pthread_mutex_destroy(&dev->profile_mutex);
 }
 
-int nsick_open(nsick_device_p dev) {
-  if (!epos_open(dev->node))
-    return NSICK_ERROR_NONE;
-  else
-    return NSICK_ERROR_OPEN;
+int nsick_connect(nsick_device_t* dev) {
+  error_clear(&dev->error);
+  
+  if (epos_node_connect(dev->node))
+    error_blame(&dev->error, &dev->node->error, NSICK_ERROR_CONNECT);
+  
+  return dev->error.code;
 }
 
-int nsick_close(nsick_device_p dev) {
-  if (!epos_close(dev->node))
-    return NSICK_ERROR_NONE;
-  else
-    return NSICK_ERROR_CLOSE;
+int nsick_disconnect(nsick_device_t* dev) {
+  error_clear(&dev->error);
+  
+  if (epos_node_disconnect(dev->node))
+    error_blame(&dev->error, &dev->node->error, NSICK_ERROR_DISCONNECT);
+  
+  return dev->error.code;
 }
 
-int nsick_home(nsick_device_p dev, double timeout) {
-  if (!epos_home(dev->node, timeout))
-    return NSICK_ERROR_NONE;
-  else
-    return NSICK_ERROR_HOME;
+int nsick_home(nsick_device_t* dev, double timeout) {
+  error_clear(&dev->error);
+  
+  if (epos_node_home(dev->node, timeout)) {
+    if (dev->node->dev.error.code == EPOS_DEVICE_ERROR_WAIT_TIMEOUT)
+      error_blame(&dev->error, &dev->node->error, NSICK_ERROR_WAIT_TIMEOUT);
+    else
+      error_blame(&dev->error, &dev->node->error, NSICK_ERROR_HOME);
+  }
+  
+  return dev->error.code;
 }
 
-int nsick_home_stop(nsick_device_p dev) {
-  if (!epos_home_stop(dev->node))
-    return NSICK_ERROR_NONE;
-  else
-    return NSICK_ERROR_HOME;
+int nsick_home_stop(nsick_device_t* dev) {
+  error_clear(&dev->error);
+  
+  if (epos_home_stop(dev->node))
+    error_blame(&dev->error, &dev->node->error, NSICK_ERROR_HOME);
+  
+  return dev->error.code;
 }
 
-int nsick_home_wait(nsick_device_p dev, double timeout) {
-  if (!epos_home_wait(dev->node, timeout))
-    return NSICK_ERROR_NONE;
-  else
-    return NSICK_ERROR_WAIT_TIMEOUT;
+int nsick_home_wait(nsick_device_t* dev, double timeout) {
+  error_clear(&dev->error);
+  
+  if (epos_home_wait(dev->node, timeout)) {
+    if (dev->node->dev.error.code == EPOS_DEVICE_ERROR_WAIT_TIMEOUT)
+      error_blame(&dev->error, &dev->node->error, NSICK_ERROR_WAIT_TIMEOUT);
+    else
+      error_blame(&dev->error, &dev->node->error, NSICK_ERROR_HOME);
+  }
+  
+  return dev->error.code;
 }
 
 void* nsick_control(void* device) {
-  nsick_device_p dev = device;
+  nsick_device_t* dev = device;
   int result = EPOS_ERROR_NONE;
   int move_start = 1;
   double timestamp;
 
   pthread_mutex_lock(&dev->profile_mutex);
   epos_position_profile_init(&dev->profile, dev->start_pos, dev->velocity,
-    dev->acceleration, dev->acceleration, epos_profile_sinusoidal);
+    dev->acceleration, dev->acceleration, epos_profile_sinusoidal, 0);
 
   pthread_mutex_lock(&dev->control_mutex);
   while (!thread_test_exit(&dev->thread) &&
@@ -212,11 +292,11 @@ void* nsick_control(void* device) {
 }
 
 void nsick_cleanup(void* device) {
-  nsick_device_p dev = device;
+  nsick_device_t* dev = device;
   epos_position_profile_stop(dev->node);
 }
 
-int nsick_start(nsick_device_p dev, size_t max_sweeps) {
+int nsick_start(nsick_device_t* dev, size_t max_sweeps) {
   dev->max_sweeps = max_sweeps;
   dev->num_sweeps = 0;
   dev->result = EPOS_ERROR_NONE;
@@ -224,28 +304,31 @@ int nsick_start(nsick_device_p dev, size_t max_sweeps) {
   thread_start(&dev->thread, nsick_control, nsick_cleanup, dev, 0.0);
 }
 
-int nsick_stop(nsick_device_p dev) {
+int nsick_stop(nsick_device_t* dev) {
+  error_clear(&dev->error);
+  
   thread_exit(&dev->thread, 1);
-
-  if (!dev->result)
-    return NSICK_ERROR_NONE;
-  else
-    return NSICK_ERROR_PROFILE;
+  if (dev->result)
+    error_set(&dev->error, NSICK_ERROR_PROFILE);
+  
+  return dev->error.code;
 }
 
-int nsick_wait(nsick_device_p dev, double timeout) {
-  if (thread_wait(&dev->thread, timeout) != THREAD_ERROR_WAIT_TIMEOUT)
-    return NSICK_ERROR_NONE;
-  else
-    return NSICK_ERROR_WAIT_TIMEOUT;
+int nsick_wait(nsick_device_t* dev, double timeout) {
+  error_clear(&dev->error);
+  
+  if (thread_wait(&dev->thread, timeout) == THREAD_ERROR_WAIT_TIMEOUT)
+    error_set(&dev->error, NSICK_ERROR_WAIT_TIMEOUT);  
+  
+  return dev->error.code;
 }
 
-double nsick_get_pose(nsick_device_p dev, transform_pose_p pose) {
+double nsick_get_pose(nsick_device_t* dev, transform_pose_t* pose) {
   double timestamp;
 
   pthread_mutex_lock(&dev->control_mutex);
   timer_start(&timestamp);
-  float pitch = epos_get_position(dev->node);
+  float pitch = epos_node_get_position(dev->node);
   timer_correct(&timestamp);
   pthread_mutex_unlock(&dev->control_mutex);
 
@@ -254,15 +337,16 @@ double nsick_get_pose(nsick_device_p dev, transform_pose_p pose) {
   return timestamp;
 }
 
-double nsick_get_pose_estimate(nsick_device_p dev, transform_pose_p pose) {
+double nsick_get_pose_estimate(nsick_device_t* dev, transform_pose_t* pose) {
   double timestamp;
 
   pthread_mutex_lock(&dev->profile_mutex);
   timer_start(&timestamp);
-  float pitch = epos_position_profile_estimate(&dev->profile, timestamp);
+  epos_profile_value_t value = epos_position_profile_eval(
+    &dev->profile, timestamp);
   pthread_mutex_unlock(&dev->profile_mutex);
 
-  nsick_sensor_get_pose(&dev->sensor, pitch, pose);
+  nsick_sensor_get_pose(&dev->sensor, value.position, pose);
 
   return timestamp;
 }

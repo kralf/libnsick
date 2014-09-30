@@ -1,3 +1,9 @@
+libnsick (0.1-8) unstable; urgency=low
+
+  * Release distribution for Ubuntu Trusty Tahr
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 30 Sep 2014 18:13:00 +0100
+
 libnsick (0.1-7) unstable; urgency=low
 
   * Revised preprocessor defines naming conventions

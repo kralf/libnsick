@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <signal.h>
 
+#include <config/parser.h>
+
 #include "nsick.h"
 
 int quit = 0;
@@ -30,21 +32,38 @@ void nsick_signaled(int signal) {
 }
 
 int main(int argc, char **argv) {
+  config_parser_t parser;
   nsick_device_t dev;
   transform_pose_t pose;
   
-  if (nsick_init_arg(&dev, argc, argv, 0, 0))
-    return -1;
+  config_parser_init(&parser,
+    "Home nodding SICK device",
+    "Establish the communication with a connected nodding SICK device and "
+    "attempt to home it. The homing will be stopped if SIGINT is received "
+    "or the homing operation is completed.");  
+  nsick_init_config_parse(&dev, &parser, 0, argc, argv,
+    config_parser_exit_error);
+  config_parser_destroy(&parser);
 
   signal(SIGINT, nsick_signaled);
 
-  if (nsick_open(&dev))
-    return -1;
-  if (!nsick_home(&dev, 0.0)) {
-    while (!quit && nsick_home_wait(&dev, 0.1));
-    nsick_home_stop(&dev);
-  }
-  nsick_close(&dev);
+  nsick_connect(&dev);
+  error_exit(&dev.error);
+
+  nsick_home(&dev, 0.0);
+  if (dev.error.code != NSICK_ERROR_WAIT_TIMEOUT)
+    error_exit(&dev.error);
+
+  while (!quit) {
+    if (nsick_home_wait(&dev, 0.1) != NSICK_ERROR_WAIT_TIMEOUT)
+      error_exit(&dev.error);
+  };
+  
+  nsick_home_stop(&dev);
+  error_exit(&dev.error);
+  
+  nsick_disconnect(&dev);
+  error_exit(&dev.error);
 
   nsick_destroy(&dev);
   return 0;

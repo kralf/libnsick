@@ -52,3 +52,10 @@ remake_distribute_deb(
   DEPENDS libepos-dev tulibs-dev remake pkg-config doxygen
   PASS CMAKE_BUILD_TYPE LIBNSICK_GIT_REVISION
 )
+remake_distribute_deb(
+  DISTRIBUTION trusty
+  SECTION libs
+  UPLOAD ppa:kralf/asl
+  DEPENDS libepos-dev tulibs-dev remake pkg-config doxygen
+  PASS CMAKE_BUILD_TYPE LIBNSICK_GIT_REVISION
+)
